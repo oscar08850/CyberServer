@@ -32,15 +32,7 @@ io.on('connection', (socket: Socket) => {
         io.emit('nuevoMensaje', mensaje);
     })
 
-    socket.on('mensajeCifrado', (data: modelos.NoRepudio) => {
-        console.log(data.usuarioOrigen + " quiere enviar un mensaje a " + data.usuarioDestino)
-        socket.to(data.usuarioDestino).emit('mensajeCifrado', data);
-    })
 
-    socket.on('contestar', (data: modelos.NoRepudio) => {
-        console.log(data.usuarioDestino + " quiere recibir el mensaje de " + data.usuarioOrigen)
-        socket.to(data.usuarioOrigen).emit('contestado', data);
-    })
 
     socket.on('noContestado', (usuario: string) => {
         console.log(usuario + " no ha contestado");
