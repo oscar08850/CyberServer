@@ -1,21 +1,25 @@
 import express from 'express'
 import cors from 'cors'
 import * as jose from 'jose'
-
-
-
-
 import * as modelos from './modelos'
+
+// "npm start" para ejecutarlo
 
 
 //VARIABLES
 const port = 3000
 
- 
+ ///////////*****//////////
+//     Esto son pruebas
+
+///Hay que generar las claves aquí, no dentro de una ruta para que sean fijas y no cambien cada vez. Pero el metodo await no lo coge.
+// documentacion metodo generate key: https://github.com/panva/jose/blob/v3.x/docs/functions/util_generate_key_pair.generateKeyPair.md#readme
+
+let keyRSA: jose.GenerateKeyPairResult;
+const prueba = jose.exportJWK(keyRSA.publicKey)
 
 
-
-const { publicKey, privateKey } = jose.generateKeyPair('RSA-OAEP') //USAR RS256 SI NO NOS ACLARAMOS
+//const { publicKey, privateKey } = jose.generateKeyPair('RSA-OAEP') //USAR RS256 SI NO NOS ACLARAMOS
 
 //const { publicKey, privateKey } = async () => { await jose.generateKeyPair('RSA-OAEP') //USAR RS256 SI NO NOS ACLARAMOS
 
@@ -29,7 +33,7 @@ console.log("private key")
 
 console.log(privateKey)
 
-
+ ///////////*****//////////
 
 //SERVIDOR
 const app = express()
@@ -132,7 +136,7 @@ app.get('/secretKey', async (req, res) => {
 
 })
 
-app.post('/autenticar', (req, res) => {
+app.post('/autenticar', (req, res) => { //esta copiada de otro lado, no tiene porque usarse
   if(req.body.usuario === "asfo" && req.body.contrasena === "holamundo") {
   const payload = {
     check:  true
