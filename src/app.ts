@@ -1,12 +1,15 @@
 import express from 'express'
 import cors from 'cors'
 import * as jose from 'jose'
+
 import * as modelos from './modelos'
+import { JWK } from 'jose'
 
 // "npm start" para ejecutarlo
 
 
 //VARIABLES
+
 const port = 3000
 
  ///////////*****//////////
@@ -15,44 +18,80 @@ const port = 3000
 ///Hay que generar las claves aquí, no dentro de una ruta para que sean fijas y no cambien cada vez. Pero el metodo await no lo coge.
 // documentacion metodo generate key: https://github.com/panva/jose/blob/v3.x/docs/functions/util_generate_key_pair.generateKeyPair.md#readme
 
-let keyRSA: jose.GenerateKeyPairResult;
-const prueba = jose.exportJWK(keyRSA.publicKey)
+//let keyRSA: jose.GenerateKeyPairResult;
+//const prueba = jose.exportJWK(keyRSA.publicKey)
 
+let publickeyServidor: JWK = {};
+let privatekeyServidor: JWK = {};
 
-//const { publicKey, privateKey } = jose.generateKeyPair('RSA-OAEP') //USAR RS256 SI NO NOS ACLARAMOS
+const myAsynFunction = async (): Promise<jose.GenerateKeyPairResult> => {
+    const { publicKey, privateKey } = await jose.generateKeyPair('RSA-OAEP')
+    publickeyServidor = await jose.exportJWK(publicKey)
+    privatekeyServidor = await jose.exportJWK(privateKey) 
+    //console.log(publickeyServidor)
+    //console.log(privatekeyServidor)
+    return {
+      publicKey, 
+      privateKey
+    } 
+}
+ 
+//let publickeyServidor: JWK => {
+  //myAsynFunction();
+//}
 
-//const { publicKey, privateKey } = async () => { await jose.generateKeyPair('RSA-OAEP') //USAR RS256 SI NO NOS ACLARAMOS
+//https://github.com/panva/jose/blob/main/docs/functions/key_generate_key_pair.generateKeyPair.md
 
-const publicJwk = jose.exportJWK(publicKey)
-
-console.log("public key")
-
-console.log(publicJwk)
-
-console.log("private key")
-
-console.log(privateKey)
-
- ///////////*****//////////
+myAsynFunction();//Generamos las keys
 
 //SERVIDOR
 const app = express()
-let jwt = require('jsonwebtoken')
-
-app.use(cors({
-  origin: 'http://localhost:4200' // angular.js server
-}), express.json())
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 app.get('/', (req, res) => {
-  res.send('hello world 2')
+  res.sendFile('helloworld.html', { root: __dirname });
 })
 
+io.on('connection', function(socket: any) {
+  socket.data.username = "alice";
+  console.log('The user ' + socket.data.username + ' connected');
+
+  //Whenever someone disconnects this piece of code executed
+  socket.on('disconnect', function () {
+     console.log('A user disconnected');
+  });
+});
+
+http.listen(3000, function() {
+  console.log('listening on 3000'); 
+});
+
+/*app.use(cors({
+  origin: 'http://localhost:' + port.toString() // angular.js server
+}), express.json()) */
+
+app.get('/GOGO', (req, res) => { 
+  res.json({
+    publickeyServidor,
+    privatekeyServidor
+  })
+})
+
+app.get('/connectedUsers', (req, res) => {
+  const sockets = io.fetchSockets();
+  console.log(sockets[0].data.username); // "alice"
+
+  res.send(io.engine.clientsCount.toString())
+})
 
 
 app.get('/mensaje', async (req, res) => {
   const { publicKey, privateKey } = await jose.generateKeyPair('RSA-OAEP') //USAR RS256 SI NO NOS ACLARAMOS
 
   const publicJwk = await jose.exportJWK(publicKey)
+
+  jose.exportJWK(publicKey)
 
   console.log("public key")
 
@@ -134,37 +173,4 @@ app.get('/secretKey', async (req, res) => {
   console.log(jwt)
 
 
-})
-
-app.post('/autenticar', (req, res) => { //esta copiada de otro lado, no tiene porque usarse
-  if(req.body.usuario === "asfo" && req.body.contrasena === "holamundo") {
-  const payload = {
-    check:  true
-  };
-  const token = jwt.sign(payload, app.get('llave'), {
-    expiresIn: 1440
-  });
-  res.json({
-    mensaje: 'Autenticación correcta',
-    token: token
-  });
-  } else {
-      res.json({ mensaje: "Usuario o contraseña incorrectos"})
-  }
-})
-
-
-
-//SERVIDOR SOCKETS
-const server = require('http').createServer(app);
-module.exports.io = require('socket.io')(server, {
-  cors: {
-    origin: "http://localhost:4200",
-    methods: ["GET", "POST"]
-  }
-});
-require('./sockets');
-
-server.listen(port, function () {
-  console.log(`Listening on http://localhost:${port}`)
 })

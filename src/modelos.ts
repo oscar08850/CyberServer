@@ -1,7 +1,6 @@
 export interface Usuario {
     nombre: string
-    eHex: string
-    nHex: string
+    pubKey: string
 }
 
 export interface MensajeServidor {
@@ -11,4 +10,3 @@ export interface MensajeServidor {
     iv: string
     clave?: string
 }
-
