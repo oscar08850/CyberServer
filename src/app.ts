@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import * as jose from 'jose'
-
+import { Usuario } from "./usuario"
 import * as modelos from './modelos'
 import { JWK } from 'jose'
 
@@ -44,24 +44,44 @@ const myAsynFunction = async (): Promise<jose.GenerateKeyPairResult> => {
 
 myAsynFunction();//Generamos las keys
 
+let user1 = new Usuario('Dani', '1234')
+
+
+
+//var value = parseFloat((<HTMLInputElement>document.getElementById("myValue")).value);
+
+
+
 //SERVIDOR
 const app = express()
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 app.get('/', (req, res) => {
-  res.sendFile('helloworld.html', { root: __dirname });
+  res.sendFile('chat.html', { root: __dirname });
 })
+
+app.get('/index', (req, res) => { 
+  res.sendFile('index.html', { root: __dirname });
+  }) 
 
 io.on('connection', function(socket: any) {
   socket.data.username = "alice";
   console.log('The user ' + socket.data.username + ' connected');
+
+  socket.on('nuevo mensaje', function(msj: any) {
+    io.emit('nuevo mensaje', msj);
+    
+  });
 
   //Whenever someone disconnects this piece of code executed
   socket.on('disconnect', function () {
      console.log('A user disconnected');
   });
 });
+
+
+
 
 http.listen(3000, function() {
   console.log('listening on 3000'); 
@@ -80,7 +100,10 @@ app.get('/GOGO', (req, res) => {
 
 app.get('/connectedUsers', (req, res) => {
   const sockets = io.fetchSockets();
-  console.log(sockets[0].data.username); // "alice"
+  var clients = io.sockets.clients;
+  console.log(clients); // "alice"
+
+  //console.log(sockets[0].data.username); // "alice"
 
   res.send(io.engine.clientsCount.toString())
 })

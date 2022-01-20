@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sala de chat</title>
+  <style>
+    body{font-family: Arial;}
+  </style>
+</head>
+<body>
+  <h3>Mensajes:</h3>
+  <ul id="listado-msjs">
+     
+  </ul>
+  <div id="env-msjs">
+      <input id="nuevo-msj"  placeholder="Nuevo mensaje">
+      <button id="btn-msj" onclick="enviarMensaje()">Enviar</button>
+  </div>
+   
+  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io(); // Inicializamos socketIO en el cliente
+     
+    /*
+     * Evento listener para el 'nuevo mensaje'
+     *   Se puede ver que es el mismo evento que se envia 
+     *   desde el servidor.
+     * Agregamos el mensaje ingresado por el usuario a la lista.
+     */
+    socket.on('nuevo mensaje', function (msj) {
+      $('#listado-msjs').append( $('<li>').text(msj) );
+    });
+     
+    /*
+     * Emitimos un evento de tipo 'nuevo mensaje' cada vez
+     * que se presiona el botón enviar y enviamos
+     * su contenido como mensaje.
+     */
+    function enviarMensaje() {
+        socket.emit('nuevo mensaje', $('#nuevo-msj').val());
+        $('#nuevo-msj').val('');
+    };
+  </script>
+</body>
+</html>
